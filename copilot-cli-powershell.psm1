@@ -33,8 +33,20 @@ function Invoke-GitHubCopilot {
     Invoke-CopilotCommand "what-the-shell" ($RemainingArguments -join " ")
 }
 
+function Invoke-GitHubCopilotWithPowershell {
+    [CmdletBinding()]
+    param (
+        [Parameter(ValueFromRemainingArguments, HelpMessage = "The remaining arguments for the Copilot command.")]
+        [string[]]$RemainingArguments
+    )
+    $newArgs = "Using PowerShell " + ($RemainingArguments -join " ")
+    Invoke-CopilotCommand "what-the-shell" $newArgs
+}
+
 function Invoke-CopilotCommand {
     param (
+
+        [ValidateSet("git-assist", "gh-assist", "what-the-shell")]
         [Parameter(Mandatory)][string]$SubCommand,
         [Parameter(Mandatory)][string]$Instruction
     )
@@ -75,17 +87,18 @@ function Test-EscapedString {
 
 <#
 .SYNOPSIS
-    Sets aliases '??', 'git?', and 'gh?'
+    Sets aliases '??', 'git?', 'gh?', and 'ps?'
 #>
 function Set-PassiveGitHubCopilotAliases {
     Set-Alias -Name '??' -Value Invoke-GitHubCopilot -Scope Global
     Set-Alias -Name 'gh?' -Value Invoke-GHAlias -Scope Global
     Set-Alias -Name 'git?' -Value Invoke-GitAlias -Scope Global
+    Set-Alias -Name 'ps?' -Value Invoke-GitHubCopilotWithPowershell -Scope Global
 }
 
 <#
 .SYNOPSIS
-    Sets aliases '??', 'git?', and 'gh?' and hooks the Enter key to escape commands.
+    Sets aliases '??', 'git?', 'gh?', and 'ps?' and hooks the Enter key to escape commands.
 #>
 function Set-GitHubCopilotAliases {
     Set-PassiveGitHubCopilotAliases
@@ -101,8 +114,8 @@ function Set-GitHubCopilotAliases {
         $command = $elems[0]
         $question = $elems[1]
 
-        if ($command -in "??", "git?", "gh?") {
-            echo (Test-EscapedString -String $elems[1])
+        if ($command -in "??", "git?", "gh?", "ps?") {
+            Write-Output (Test-EscapedString -String $elems[1])
             if (-not (Test-EscapedString -String $elems[1])) {
                 $question = $elems[1].Replace("'", "''")
                 $question = "'$question'"
@@ -116,4 +129,4 @@ function Set-GitHubCopilotAliases {
 }
 
 
-Export-ModuleMember -Function Set-PassiveGitHubCopilotAliases, Set-GitHubCopilotAliases, Invoke-CopilotCommand, Invoke-GitHubCopilot, Invoke-GHAlias, Invoke-GitAlias
+Export-ModuleMember -Function Set-PassiveGitHubCopilotAliases, Set-GitHubCopilotAliases, Invoke-CopilotCommand, Invoke-GitHubCopilot, Invoke-GHAlias, Invoke-GitAlias, Invoke-GitHubCopilotWithPowershell
